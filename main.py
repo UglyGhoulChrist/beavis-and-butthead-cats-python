@@ -36,7 +36,7 @@ class House:
                ''.format(self.food, self.cat_food, self.money, self.dirt)
 
     def dirt(self):
-        self.dirt += 5
+        self.dirt += 10
 
     def clean(self):
         self.dirt -= 100
@@ -64,7 +64,7 @@ class Man:
     def work(self):
         # Увеличить кол-во зарабатываемых человеком денег до 150 (он выучил пайтон и устроился на хорошую работу :)
         cprint('{} сходил на работу'.format(self.name), color='blue')
-        self.house.money += 150
+        self.house.money += 100
         self.fullness -= 10
 
     def watch_MTV(self):
@@ -74,11 +74,14 @@ class Man:
     def shopping(self):
         if self.house.money >= 50:
             cprint('{} сходил в магазин за едой'.format(self.name), color='magenta')
-            self.house.money -= 50
             if self.house.food <= 10:
+                self.house.money -= 50
                 self.house.food += 50
-            else:
+            elif self.house.cat_food <= 10:
+                self.house.money -= 50
                 self.house.cat_food += 50
+            else:
+                print("Что-то пошло не так")
         else:
             cprint('{} деньги кончились!'.format(self.name), color='red')
 
@@ -90,7 +93,7 @@ class Man:
     #   убраться в доме - степень грязи в доме уменьшается на 100, сытость у человека уменьшается на 20.
     def clear_house(self):
         self.fullness -= 20
-        House.clean()
+        House.clean(self=my_sweet_home)
 
     def act(self):
         if self.fullness <= 0:
@@ -99,10 +102,12 @@ class Man:
         dice = randint(1, 6)
         if self.fullness < 20:
             self.eat()
-        elif self.house.food < 10 or self.house.cat_food < 10:
+        elif self.house.food < 20 or self.house.cat_food < 20:
             self.shopping()
-        elif self.house.money < 50:
+        elif self.house.money < 100:
             self.work()
+        elif self.house.dirt >= 100:
+            self.house.clean()
         elif dice == 1:
             self.work()
         elif dice == 2:
@@ -134,7 +139,7 @@ class Cat:
     def cat_eat(self):
         if self.house.cat_food >= 10:
             cprint('{} поел'.format(self.cat_name), color='yellow')
-            self.cat_fullness += 20
+            self.cat_fullness += 10
             self.house.cat_food -= 10
         else:
             cprint('{} нет еды'.format(self.cat_name), color='red')
@@ -147,7 +152,7 @@ class Cat:
     # Кот дерет обои - сытость уменьшается на 10,
     # степень грязи в доме увеличивается на 5
     def cat_wallpaper(self):
-        cprint('{} дерет обои'.format(self.cat_name), color='yellow')
+        cprint('{} дерет обои'.format(self.cat_name), color='red')
         self.cat_fullness -= 10
         House.dirt(self=my_sweet_home)
 
