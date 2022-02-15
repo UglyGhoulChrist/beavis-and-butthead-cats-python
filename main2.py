@@ -25,23 +25,6 @@ class House:  # Все они живут в одном доме, дом хара
         self.meal = 50  # кол-во еды в холодильнике (в начале - 50)
         self.dirt = 0  # кол-во грязи (в начале - 0)
 
-    def inspect_husband(self):
-        if self.many <= 100:
-            husband.work()
-            return True
-        else:
-            return False
-
-    def inspect_wife(self):
-        if self.meal <= 50:
-            wife.shopping()
-            return True
-        elif self.dirt >= 80:
-            wife.clean_house()
-            return True
-        else:
-            return False
-
     def __str__(self):
         return 'Я - {}, денег в тумбочке {} рублей, еды в холодильнике {}, грязи в доме {}%.'.format(self.name,
                                                                                                      self.many,
@@ -52,7 +35,7 @@ class House:  # Все они живут в одном доме, дом хара
 class Human:  # У людей есть имя, степень сытости (в начале - 30) и степень счастья (в начале - 100).
 
     def __init__(self, name):
-        self.my_house = house.name
+        self.my_house = house
         self.name = name  # У людей есть имя
         self.satiety = 30  # У людей есть степень сытости (в начале - 30)
         self.happiness = 100  # У людей есть степень счастья (в начале - 100).
@@ -67,9 +50,9 @@ class Human:  # У людей есть имя, степень сытости (в
             cprint("{} - {} поел.".format(self.__class__.__name__, self.name))
 
     def __str__(self):
-        return 'Я - {}, живу в {}, степень сытости {}% , степень счастья {}%.'.format(self.name, self.my_house,
-                                                                                      self.satiety,
-                                                                                      self.happiness)
+        return 'Я - {}, степень сытости {}% , степень счастья {}%.'.format(self.name,
+                                                                           self.satiety,
+                                                                           self.happiness)
 
 
 class Husband(Human):  # Муж
@@ -79,18 +62,22 @@ class Husband(Human):  # Муж
         self.earnings = 0
 
     def __str__(self):
+
         return super().__str__()
 
     def husband_inspect(self):
+        house.dirt += 5  # Грязь добавляется по 5 пунктов, за одну уборку жена может убирать до 100 единиц грязи.
+        if house.dirt >= 80:  # Если в доме грязи больше 80 - у людей падает степень счастья каждый день на 10 пунктов,
+            self.happiness -= 10
 
-        if self.satiety <= 0 or self.happiness <= 10:
-            cprint("{} умер".format(self.name), "red")
-            # ToDo Разобраться как умирают
-        elif self.satiety <= 10:
+        if self.satiety <= 10:
             self.eat()
             return True
         elif self.happiness <= 20:
             self.gaming()
+            return True
+        elif house.many <= 100:
+            self.work()
             return True
         elif self.satiety >= 90:
             self.gaming()
@@ -109,7 +96,7 @@ class Husband(Human):  # Муж
         else:
             print("Что-то пошло не так...")
 
-    def eat(self): # есть, кушают взрослые максимум по 10 единиц еды, степень сытости растет на 10 за 10 еды.
+    def eat(self):  # есть, кушают взрослые максимум по 10 единиц еды, степень сытости растет на 10 за 10 еды.
         super().eat()
 
     def work(self):  # ходить на работу, деньги в тумбочку добавляет муж, после работы - 150 единиц за раз,
@@ -122,8 +109,8 @@ class Husband(Human):  # Муж
     def gaming(self):  # играть в WoT, приводит к уменьшению степени сытости на 10 пунктов
         self.satiety -= 10
         self.happiness += 20  # Степень счастья растет от игры в WoT (на 20)
-        if self.happiness>=100 :
-            self.happiness =100
+        if self.happiness >= 100:
+            self.happiness = 100
 
         cprint("{} играл в WoT целый день.".format(self.name), 'cyan')
 
@@ -139,14 +126,20 @@ class Wife(Human):  # Жена
 
     def wife_inspect(self):
 
-        if self.satiety <= 0 or self.happiness <= 10:
-            cprint("{} умер".format(self.name), "red")
-            # ToDo Разобраться как умирают
-        elif self.satiety <= 10:
+        house.dirt += 5  # Грязь добавляется по 5 пунктов, за одну уборку жена может убирать до 100 единиц грязи.
+        if house.dirt >= 80:  # Если в доме грязи больше 80 - у людей падает степень счастья каждый день на 10 пунктов,
+            self.happiness -= 10
+        if self.satiety <= 10:
             self.eat()
             return True
         elif self.happiness <= 20:
-            wife.buy_fur_coat()
+            self.buy_fur_coat()
+            return True
+        elif house.meal <= 50:
+            self.shopping()
+            return True
+        elif house.dirt >= 80:
+            self.clean_house()
             return True
         else:
             return False
@@ -189,7 +182,7 @@ class Wife(Human):  # Жена
             self.coat += 1
             self.satiety -= 10
             self.happiness += 60  # Степень счастья растет от покупки шубы на 60
-            if self.happiness>=100:
+            if self.happiness >= 100:
                 self.happiness = 100
             cprint("{} купил себе шубу.".format(self.name), "magenta")
 
@@ -213,22 +206,18 @@ cprint(wife, color='cyan')
 husband = Husband(name="Butthead")
 cprint(husband, color='cyan')
 
-for day in range(1, 366):
+for day in range(1, 10):
     cprint('================== День {} =================='.format(day), color='red')
 
     if husband.husband_inspect() is False:
-        if house.inspect_husband() is False:
-            husband.act()
-    if wife.wife_inspect() is False:
-        if house.inspect_wife() is False:
-            wife.act()
+        husband.act()
 
-    house.dirt += 10  # Грязь добавляется по 10 пунктов, за одну уборку жена может убирать до 100 единиц грязи.
-    if house.dirt >= 80:  # Если в доме грязи больше 80 - у людей падает степень счастья каждый день на 10 пунктов,
-        wife.happiness -= 10
-        husband.happiness -= 10
+    if wife.wife_inspect() is False:
+        wife.act()
+
     cprint(husband, color='cyan')
     cprint(wife, color='magenta')
+    cprint('================== Вечер ===================', color='white')
     cprint(house, color='green')
 
 cprint("Всего было заработанно {} руб и куплено {} шуб".format(husband.earnings, wife.coat))
