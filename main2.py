@@ -4,7 +4,6 @@ from termcolor import cprint
 from random import randint
 
 
-######################################################## Часть первая
 # Создать модель жизни небольшой семьи.
 #
 # Все они живут в одном доме, дом характеризуется
@@ -20,25 +19,23 @@ class House:  # Все они живут в одном доме, дом хара
 
     def __init__(self, name):
         self.name = name
-        self.many = 100  # кол-во денег в тумбочке (в начале - 100),
-        # Деньги в тумбочку добавляет муж, после работы - 150 единиц за раз.
-        self.meal = 50  # кол-во еды в холодильнике (в начале - 50)
-        self.dirt = 0  # кол-во грязи (в начале - 0)
+        self.many = 100  # денег в тумбочке. + 150 муж после работы.
+        self.meal = 50  # еды в холодильнике для людей.
+        self.meal_cat = 30  # еды для кота.
+        self.dirt = 0  # % кол-во грязи.
 
     def __str__(self):
-        return 'Я - {}, денег в тумбочке {} рублей, еды в холодильнике {}, грязи в доме {}%.'.format(self.name,
-                                                                                                     self.many,
-                                                                                                     self.meal,
-                                                                                                     self.dirt)
+        return f'Я - {self.name}, денег в тумбочке {self.many} рублей, еды в холодильнике {self.meal}, еды для кота' \
+               f' {self.meal_cat}, грязи в доме {self.dirt}%.'
 
 
-class Human:  # У людей есть имя, степень сытости (в начале - 30) и степень счастья (в начале - 100).
+class Human:
 
     def __init__(self, name):
         self.my_house = house
-        self.name = name  # У людей есть имя
-        self.satiety = 30  # У людей есть степень сытости (в начале - 30)
-        self.happiness = 100  # У людей есть степень счастья (в начале - 100).
+        self.name = name  # имя.
+        self.satiety = 30  # % степень сытости.
+        self.happiness = 100  # % степень счастья.
 
     def eat(self):  # есть, кушают взрослые максимум по 10 единиц еды, степень сытости растет на 10 за 10 еды.
         if house.meal < 10:
@@ -47,12 +44,12 @@ class Human:  # У людей есть имя, степень сытости (в
         else:
             house.meal -= 10
             self.satiety += 10
-            cprint("{} - {} поел.".format(self.__class__.__name__, self.name))
+            if self.satiety > 100:
+                self.satiety = 100
+            cprint(f"{self.name} поел.")
 
     def __str__(self):
-        return 'Я - {}, степень сытости {}% , степень счастья {}%.'.format(self.name,
-                                                                           self.satiety,
-                                                                           self.happiness)
+        return f'Я - {self.name}, степень сытости {self.satiety}% , степень счастья {self.happiness}%.'
 
 
 class Husband(Human):  # Муж
@@ -65,8 +62,7 @@ class Husband(Human):  # Муж
 
         return super().__str__()
 
-    def husband_inspect(self):
-        house.dirt += 5  # Грязь добавляется по 5 пунктов, за одну уборку жена может убирать до 100 единиц грязи.
+    def inspect(self):
         if house.dirt >= 80:  # Если в доме грязи больше 80 - у людей падает степень счастья каждый день на 10 пунктов,
             self.happiness -= 10
 
@@ -124,9 +120,8 @@ class Wife(Human):  # Жена
     def __str__(self):
         return super().__str__()
 
-    def wife_inspect(self):
+    def inspect(self):
 
-        house.dirt += 5  # Грязь добавляется по 5 пунктов, за одну уборку жена может убирать до 100 единиц грязи.
         if house.dirt >= 80:  # Если в доме грязи больше 80 - у людей падает степень счастья каждый день на 10 пунктов,
             self.happiness -= 10
         if self.satiety <= 10:
@@ -135,7 +130,7 @@ class Wife(Human):  # Жена
         elif self.happiness <= 20:
             self.buy_fur_coat()
             return True
-        elif house.meal <= 50:
+        elif house.meal <= 50 or house.meal_cat <= 30:
             self.shopping()
             return True
         elif house.dirt >= 80:
@@ -162,8 +157,10 @@ class Wife(Human):  # Жена
 
     def shopping(self):  # покупать продукты, еда стоит 100 денег 100 единиц еды,
         # приводит к уменьшению степени сытости на 10 пунктов
+
         if house.meal >= 100:
             cprint("{} пошёл в магазин и вспомнил, что холодильник то не резиновый...".format(self.name), "magenta")
+
         elif house.many <= 100:
             cprint("{} надумал купить еды, но денег маловато...кто-то мало зарабатывает.".format(self.name), "magenta")
         else:
@@ -171,6 +168,15 @@ class Wife(Human):  # Жена
             house.meal += 100
             self.satiety -= 10
             cprint("{} сходил в магазин за едой.".format(self.name), "magenta")
+        if house.meal_cat >= 100:
+            cprint("...у кота еды полно...", "magenta")
+        elif house.many <= 50:
+            cprint("{} надумал купить еды коту, но денег маловато...кто-то мало зарабатывает.".format(self.name),
+                   "magenta")
+        else:
+            house.many -= 50
+            house.meal_cat += 50
+            cprint("{} сходил в магазин за едой коту.".format(self.name), "magenta")
 
     def buy_fur_coat(self):  # покупать шубу, стоит 350 единиц, приводит к уменьшению степени сытости на 10 пунктов
         if house.many <= 500:
@@ -196,31 +202,82 @@ class Wife(Human):  # Жена
             cprint("{} убрался в доме.".format(self.name), "magenta")
 
 
+class Cat:
+    def __init__(self, name):
+        self.my_house = house
+        self.name = name  # У котов есть имя
+        self.satiety = 30  # У котов есть степень сытости (в начале - 30)
+
+    def eat(self):  # есть, кушают коты максимум по 10 единиц еды, степень сытости растет на 20 за 10 еды.
+        if house.meal < 10:
+            cprint('Что-то кушать хочется, а в холодильнике мышь повесилась...кто-то вместо еды шубы покупает.',
+                   "red")
+
+        else:
+            house.meal_cat -= 10
+            self.satiety += 20
+            cprint("{} поел.".format(self.name))
+
+    def sleep_cat(self):
+        # приводит к уменьшению степени сытости на 10 пунктов
+        self.satiety -= 10
+        cprint("{} спал целый день.".format(self.name), 'cyan')
+
+    def tear_up_wallpaper(self):
+        # приводит к уменьшению степени сытости на 10 пунктов
+        self.satiety -= 10
+        house.dirt += 10
+        cprint("{} драл обои целый день.".format(self.name), 'cyan')
+
+    def inspect(self):
+        if self.satiety <= 10:
+            self.eat()
+            return True
+        else:
+            return False
+
+    def act(self):
+        cube = randint(1, 3)
+        if cube == 1:
+            self.eat()
+        elif cube == 2:
+            self.sleep_cat()
+        elif cube == 3:
+            self.tear_up_wallpaper()
+        else:
+            print("Что-то пошло не так...")
+
+    def __str__(self):
+        return 'Я - {}, степень сытости {}% .'.format(self.name, self.satiety)
+
+
 cprint('================== Начало ==================', color='red')
 house = House("Семейный дом")
 cprint(house, color="green")
 
-wife = Wife(name="Beavis")
-cprint(wife, color='cyan')
+residents = [Wife(name="Beavis"),
+             Husband(name="Butthead"),
+             Cat(name="Васька"),
+             Cat(name="Пушок")]
 
-husband = Husband(name="Butthead")
-cprint(husband, color='cyan')
+for resident in residents:
+    cprint(resident, color='cyan')
 
 for day in range(1, 10):
     cprint('================== День {} =================='.format(day), color='red')
+    house.dirt += len(residents) * 5
 
-    if husband.husband_inspect() is False:
-        husband.act()
+    for resident in residents:
+        if resident.inspect() is False:
+            resident.act()
 
-    if wife.wife_inspect() is False:
-        wife.act()
+    for resident in residents:
+        cprint(resident, color='magenta')
 
-    cprint(husband, color='cyan')
-    cprint(wife, color='magenta')
     cprint('================== Вечер ===================', color='white')
     cprint(house, color='green')
 
-cprint("Всего было заработанно {} руб и куплено {} шуб".format(husband.earnings, wife.coat))
+cprint("Всего было заработанно {} руб и куплено {} шуб".format(residents[1].earnings, residents[0].coat))
 
 # TODO после реализации первой части - отдать на проверку учителю
 
